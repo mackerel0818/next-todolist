@@ -1,26 +1,265 @@
-@import "tailwindcss";
-
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html,
+body {
+  height: 100%;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: "Arial", sans-serif;
+  background-color: #f6a89e;
+  color: #333;
+}
+
+.container {
+  max-width: 1200px;
+  width: 100%;
+  margin: auto;
+  padding: 2rem;
+}
+
+.title {
+  text-align: center;
+  margin-bottom: 2rem;
+  position: relative;
+}
+
+.title::before,
+.title::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 25%;
+  height: 3px;
+  background-color: #333;
+}
+
+.title::before {
+  left: 10%;
+}
+
+.title::after {
+  right: 10%;
+}
+
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+}
+
+.todo-card {
+  box-shadow: 12px 12px 0px #33322e;
+  border-radius: 24px;
+  min-height: 450px;
+  display: flex;
+  flex-direction: column;
+  border: 4px solid #33322e;
+}
+
+.card-title {
+  margin-bottom: 1rem;
+  padding-left: 1.5rem;
+  padding-top: 0.8rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 4px solid #33322e;
+}
+
+.todo-list {
+  list-style: none;
+  padding: 0 1.5rem;
+}
+
+.todo-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.7rem 0;
+  font-weight: bold;
+}
+
+.todo-text {
+  flex-grow: 1;
+  border-bottom: 2px solid #808080;
+  padding-bottom: 5px;
+  margin-right: 15px;
+}
+
+.checkbox {
+  min-width: 24px;
+  height: 24px;
+  border: 3px solid #33322e;
+  box-shadow: 2px 2px 0px #33322e;
+  border-radius: 6px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  position: relative;
+  padding: 2px;
+}
+
+.incomplete {
+  background-color: #fff0ee;
+}
+
+.success {
+  background-color: #8cd4cb;
+}
+
+.failure {
+  background-color: #f6a89e;
+}
+
+.checkbox svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* 체크마크 SVG 애니메이션 */
+@keyframes check-animation {
+  0% {
+    stroke-dashoffset: 30;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+.checkmark-svg path {
+  stroke-dasharray: 30;
+  stroke-dashoffset: 30;
+  animation: check-animation 0.3s ease forwards;
+}
+
+@keyframes x-animation {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.failure-svg {
+  animation: x-animation 0.3s ease forwards;
+}
+
+@media (max-width: 768px) {
+  .grid-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .title::before,
+  .title::after {
+    width: 15%;
+  }
+}
+
+@media (max-width: 480px) {
+  .grid-container {
+    grid-template-columns: 1fr;
+  }
+
+  .title::before,
+  .title::after {
+    width: 10%;
+  }
+}
+
+/* 투두 입력 폼 */
+.add-todo-container {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: center;
+}
+
+.add-todo-form {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 600px;
+  gap: 0.8rem;
+  background-color: white;
+  padding: 1.2rem;
+  border-radius: 20px;
+  border: 4px solid #33322e;
+  box-shadow: 10px 10px 0px #33322e;
+}
+
+.category-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem;
+  margin-bottom: 0.5rem;
+}
+
+.category-button {
+  padding: 0.5rem 1rem;
+  border-radius: 10px;
+  border: 3px solid #33322e;
+  background-color: white;
+  font-weight: bold;
+  font-size: 0.85rem;
+  cursor: pointer;
+  box-shadow: 3px 3px 0px #33322e;
+  transition: all 0.2s;
+}
+
+.category-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 3px 5px 0px #33322e;
+}
+
+.category-button.active {
+  box-shadow: 2px 2px 0px #33322e;
+  transform: translate(1px, 1px);
+}
+
+.input-button-container {
+  display: flex;
+  gap: 0.8rem;
+}
+
+.todo-input {
+  flex-grow: 1;
+  padding: 0.6rem 0.8rem;
+  border-radius: 10px;
+  border: 3px solid #33322e;
+  font-size: 0.95rem;
+  box-shadow: 3px 3px 0px #33322e;
+}
+
+.add-button {
+  padding: 0.6rem 1.2rem;
+  border-radius: 10px;
+  border: 3px solid #33322e;
+  background-color: #8cd4cb;
+  color: #33322e;
+  font-weight: bold;
+  font-size: 0.95rem;
+  cursor: pointer;
+  box-shadow: 3px 3px 0px #33322e;
+  transition: all 0.2s;
+}
+
+.add-button:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0px #33322e;
+}
+
+.add-button:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0px #33322e;
 }
