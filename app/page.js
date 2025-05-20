@@ -1,56 +1,65 @@
 "use client";
 
 import TodoCard from "./components/TodoCard";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "../lib/supabase";
 
 export default function Home() {
-  const [todoLists, setTodoLists] = useState([
-    {
-      title: "Todo",
-      bgColor: "#FFF0EE",
-      todos: [
-        {
-          text: "SQLD - 챕터 6 풀기",
-          status: "incomplete",
-        },
-        {
-          text: "아가미 읽기",
-          status: "incomplete",
-        },
-        {
-          text: "가방 모티브 뜨기",
-          status: "incomplete",
-        },
-      ],
-    },
-    {
-      title: "Don't forget",
-      bgColor: "#D0F4F0",
-      todos: [{ text: "퇴근 - 출입증 챙기기", status: "incomplete" }],
-    },
-    {
-      title: "Reminders",
-      bgColor: "#F9F3E5",
-      todos: [
-        { text: "출근하기", status: "incomplete" },
-        { text: "일하기", status: "success" },
-        { text: "퇴근하기", status: "incomplete" },
-      ],
-    },
-    {
-      title: "Wishlist",
-      bgColor: "#F4D799",
-      todos: [],
-    },
-  ]);
-
+  const [todoLists, setTodoLists] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [newTodoText, setNewTodoText] = useState("");
   const [selectedCategory, setSelectedCategory] = useState(0);
   const [isDeleteMode, setIsDeleteMode] = useState(false);
 
-  const cycleTodoStatus = (listIndex, todoIndex) => {
-    const updatedLists = [...todoLists];
-    const currentStatus = updatedLists[listIndex].todos[todoIndex].status;
+  async function fetchTodoLists() {
+    try {
+      setLoading(true);
+
+      const { data: categories, error: categoryError } = await supabase
+        .from("categories")
+        .select("*")
+        .order("id");
+
+      if (categoryError) throw categoryError;
+
+      const todosByCategory = await Promise.all(
+        categories.map(async (category) => {
+          const { data: todos, error: todoError } = await supabase
+            .from("todos")
+            .select("*")
+            .eq("category_id", category.id)
+            .order("created_at");
+
+          if (todoError) throw todoError;
+
+          return {
+            ...category,
+            title: category.title,
+            bgColor: category.bg_color,
+            todos: todos.map((todo) => ({
+              id: todo.id,
+              text: todo.text,
+              status: todo.status,
+            })),
+          };
+        })
+      );
+
+      console.log(categories);
+
+      setTodoLists(todosByCategory);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      alert("데이터를 불러오는 중 오류가 발생했습니다.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const cycleTodoStatus = async (listIndex, todoIndex) => {
+    const todoList = todoLists[listIndex];
+    const todo = todoList.todos[todoIndex];
+    const currentStatus = todo.status;
 
     let newStatus;
     if (currentStatus === "incomplete") {
@@ -61,34 +70,93 @@ export default function Home() {
       newStatus = "incomplete";
     }
 
-    updatedLists[listIndex].todos[todoIndex].status = newStatus;
-    setTodoLists(updatedLists);
+    try {
+      const { error } = await supabase
+        .from("todos")
+        .update({ status: newStatus })
+        .eq("id", todo.id);
+
+      if (error) throw error;
+
+      const updatedLists = [...todoLists];
+      updatedLists[listIndex].todos[todoIndex].status = newStatus;
+      setTodoLists(updatedLists);
+    } catch (error) {
+      console.error("Error updating todo status:", error);
+      alert("상태 변경 중 오류가 발생했습니다.");
+    }
   };
 
-  const deleteTodo = (listIndex, todoIndex) => {
-    const updatedLists = [...todoLists];
-    updatedLists[listIndex].todos.splice(todoIndex, 1);
-    setTodoLists(updatedLists);
+  const deleteTodo = async (listIndex, todoIndex) => {
+    const todoList = todoLists[listIndex];
+    const todo = todoList.todos[todoIndex];
+
+    try {
+      const { error } = await supabase.from("todos").delete().eq("id", todo.id);
+
+      if (error) throw error;
+
+      const updatedLists = [...todoLists];
+      updatedLists[listIndex].todos.splice(todoIndex, 1);
+      setTodoLists(updatedLists);
+    } catch (error) {
+      console.error("Error deleting todo:", error);
+      alert("삭제 중 오류가 발생했습니다.");
+    }
   };
 
-  const addTodo = (e) => {
+  const addTodo = async (e) => {
     e.preventDefault();
 
     if (!newTodoText.trim()) return;
 
-    const updatedLists = [...todoLists];
-    updatedLists[selectedCategory].todos.push({
-      text: newTodoText,
-      status: "incomplete",
-    });
+    try {
+      const categoryId = todoLists[selectedCategory].id;
 
-    setTodoLists(updatedLists);
-    setNewTodoText("");
+      const { data, error } = await supabase
+        .from("todos")
+        .insert([
+          {
+            text: newTodoText,
+            status: "incomplete",
+            category_id: categoryId,
+          },
+        ])
+        .select();
+
+      if (error) throw error;
+
+      const updatedLists = [...todoLists];
+      updatedLists[selectedCategory].todos.push({
+        id: data[0].id,
+        text: newTodoText,
+        status: "incomplete",
+      });
+
+      setTodoLists(updatedLists);
+      setNewTodoText("");
+    } catch (error) {
+      console.error("Error adding todo:", error);
+      alert("할 일 추가 중 오류가 발생했습니다.");
+    }
   };
 
   const toggleDeleteMode = () => {
     setIsDeleteMode(!isDeleteMode);
   };
+
+  useEffect(() => {
+    fetchTodoLists();
+  }, []);
+
+  if (loading) {
+    return (
+      <main className="container">
+        <h1 className="title">Today, Maybe</h1>
+        <div className="loading">데이터를 불러오는 중...</div>
+      </main>
+    );
+  }
 
   return (
     <main className="container">
