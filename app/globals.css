@@ -403,7 +403,7 @@ body {
 
   .category-buttons {
     display: flex;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     overflow-x: auto;
     justify-content: flex-start;
     padding-bottom: 0.5rem;
