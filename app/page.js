@@ -64,7 +64,6 @@ export default function Home() {
     setTodoLists(updatedLists);
   };
 
-  // 새 투두 추가 함수
   const addTodo = (e) => {
     e.preventDefault();
 
