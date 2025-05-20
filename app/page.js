@@ -44,9 +44,8 @@ export default function Home() {
     },
   ]);
 
-  // 새 투두 입력을 위한 상태
   const [newTodoText, setNewTodoText] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState(0); // 기본값은 첫번째 카테고리
+  const [selectedCategory, setSelectedCategory] = useState(0);
 
   const cycleTodoStatus = (listIndex, todoIndex) => {
     const updatedLists = [...todoLists];
@@ -69,7 +68,7 @@ export default function Home() {
   const addTodo = (e) => {
     e.preventDefault();
 
-    if (!newTodoText.trim()) return; // 빈 입력은 무시
+    if (!newTodoText.trim()) return;
 
     const updatedLists = [...todoLists];
     updatedLists[selectedCategory].todos.push({
@@ -78,7 +77,7 @@ export default function Home() {
     });
 
     setTodoLists(updatedLists);
-    setNewTodoText(""); // 입력 필드 초기화
+    setNewTodoText("");
   };
 
   return (
@@ -96,7 +95,6 @@ export default function Home() {
         ))}
       </div>
 
-      {/* 새 투두 입력 폼 */}
       <div className="add-todo-container">
         <form onSubmit={addTodo} className="add-todo-form">
           <div className="category-buttons">
